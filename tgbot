@@ -1,0 +1,44 @@
+import telebot
+import os
+
+BOT_TOKEN = os.environ.get('BOT_TOKEN')  # Берем токен из переменных окружения
+ADMIN_CHAT_ID = "1326948684"
+
+bot = telebot.TeleBot(BOT_TOKEN)
+
+@bot.message_handler(commands=['start'])
+def start(message):
+    bot.reply_to(message, "Привет! Бот работает на Render! 🚀")
+    user = message.from_user
+    bot.send_message(ADMIN_CHAT_ID, f"Новый пользователь: {user.first_name} (ID: {user.id})")
+
+@bot.message_handler(commands=['getid'])
+def get_id(message):
+    bot.reply_to(message, f"Ваш ID: {message.chat.id}")
+
+@bot.message_handler(commands=['r'])
+def reply_to_user(message):
+    if str(message.chat.id) != ADMIN_CHAT_ID:
+        return
+    try:
+        parts = message.text.split(' ', 2)
+        user_id = parts[1]
+        text = parts[2]
+        bot.send_message(user_id, f"💬 Ответ: {text}")
+        bot.reply_to(message, "✅ Ответ отправлен!")
+    except:
+        bot.reply_to(message, "Ошибка! Используй: /r ID_пользователя текст")
+
+@bot.message_handler(func=lambda message: True)
+def handle_message(message):
+    if message.text.startswith('/'):
+        return
+    if str(message.chat.id) == ADMIN_CHAT_ID:
+        return
+    user = message.from_user
+    bot.send_message(ADMIN_CHAT_ID, f"Сообщение от {user.first_name} (ID: {user.id}):\n{message.text}\n\nОтветить: /r {user.id} текст")
+    bot.reply_to(message, "✅ Отправлено!")
+
+print("🚀 Запускаем бота на Render...")
+bot.delete_webhook()
+bot.infinity_polling()
